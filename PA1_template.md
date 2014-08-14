@@ -31,14 +31,16 @@ This can be read like a 24-hour clock; "0" is midnight, "945" is 9:45 A.M., and
 The dataset is stored in a comma-separated-value (CSV) file and there are a 
 total of 17,568 observations in this dataset. <a href = "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip">Link to the data</a>.
 
-```{r, echo=TRUE}
+
+```r
 data = read.csv('./activity.csv', header=T)
 ```
 
 Create a second data frame for the data with the missing observations (steps=NA) 
 removed.
 
-```{r, echo=TRUE}
+
+```r
 dataWithoutNA <- data[complete.cases(data),]
 ```
 
@@ -47,7 +49,8 @@ dataWithoutNA <- data[complete.cases(data),]
 Using the data without the missing observations, let's make a histogram of the 
 total number of steps taken each day, and calculate the mean and median total number of steps taken per day.
 
-```{r, echo=TRUE, fig.height=5}
+
+```r
 stepsByDay = aggregate(steps ~ date, data=dataWithoutNA, FUN=sum)
 library(ggplot2)
 qplot(stepsByDay$steps, 
@@ -56,13 +59,18 @@ qplot(stepsByDay$steps,
       xlab="\nNumber of Steps Per Day", 
       ylab="Frequency (Number of Days)",
       xlim=c(0,25000))
+```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
+
+```r
 options(scipen=5) # needed to prevent scientific notation in RMarkdown
 meanStepsPerDay = round(mean(stepsByDay$steps,na.rm=T),1)
 medianStepsPerDay = median(stepsByDay$steps,na.rm=T)
 ```
 
-The mean number of steps each day is `r meanStepsPerDay`, and the median number 
-of steps per day is `r medianStepsPerDay`.
+The mean number of steps each day is 10766.2, and the median number 
+of steps per day is 10765.
 
 ## What is the average daily activity pattern?
 
@@ -71,7 +79,8 @@ how the number of steps behaves interval by interval, averaged over all days.
 Let's make a time series plot of the average (over all days) number of steps 
 taken per 5-minute interval.
 
-```{r, echo=TRUE, fig.height=5}
+
+```r
 averageSteps = as.vector(tapply(dataWithoutNA$steps, 
                                        dataWithoutNA$interval, mean, simplify=T))
 intervalStepAverage = data.frame(interval=data$interval[1:288], avgSteps=averageSteps)
@@ -85,29 +94,34 @@ title("Average Number of Steps per Interval\n(excluding missing observations)\n"
       xlab="Interval")
 ```
 
-```{r,echo=TRUE}
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+
+
+```r
 maxAvgStepRow = which.max(intervalStepAverage$avgSteps)
 maxAvgStepInterval = intervalStepAverage$interval[maxAvgStepRow]
 maxAvgStepCount = round(intervalStepAverage$avgSteps[maxAvgStepRow],1)
 ```
 
 The 5-minute interval that have the largest average number of steps over all 
-days is `r maxAvgStepInterval`, with `r maxAvgStepCount` steps.
+days is 835, with 206.2 steps.
 
 ## Imputing missing values
 
-```{r, echo=TRUE}
+
+```r
 missingObservations = nrow(data) - nrow(dataWithoutNA)
 ```
 
-The number of observations that are missing data is `r missingObservations`.
+The number of observations that are missing data is 2304.
 
 In a new data frame, We will fill in all the missing data points (the NAs) by
 inserting the average number of steps over all days for the corresponding 
 interval. We'll also display the updated histogram showing the distribution of 
 the total number of steps each day.
 
-```{r, echo=TRUE, fig.height=5}
+
+```r
 newData = data
 naRows = which(is.na(data$steps))
 for (i in naRows) { newData[i,1] = averageSteps[(newData[i,3]/5)+1]}
@@ -118,16 +132,21 @@ qplot(newDataByDay$steps,
       xlab="\nNumber of Steps Per Day",
       ylab="Frequency (Number of Days)",
       xlim=c(0,25000))
+```
+
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
+
+```r
 newMeanByDay = round(mean(newDataByDay$steps),1)
 newMedianByDay = median(newDataByDay$steps)
 ```
 
-The new mean number of steps taken each day is `r newMeanByDay`, and the new 
-median number of steps taken each day is `r newMedianByDay`.
+The new mean number of steps taken each day is 10282.1, and the new 
+median number of steps taken each day is 10395.
 
 Using our scheme to fill in the missing data, the mean number of steps per day 
-decreased by `r meanStepsPerDay - newMeanByDay`, and the median decreased by 
-`r medianStepsPerDay - newMedianByDay`. This is a relatively insignificant 
+decreased by 484.1, and the median decreased by 
+370. This is a relatively insignificant 
 change.
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -137,7 +156,8 @@ filled in, let's indicate which days are weekdays, and which are weekend days.
 We'll make a two-panel plot with the time series of observations of average steps,
 split into weekend days and weekdays, to see how the data varies.
 
-```{r, echo=TRUE}
+
+```r
 newData$day = weekdays(as.Date(newData$date))
 dayLevels = levels(factor(newData$day))
 newData$dayType = "weekday"
@@ -155,6 +175,8 @@ ggplot(data=averageStepsByDayType,
        facet_wrap(~ dayType, nrow=2) +
        scale_colour_discrete("Day Type")
 ```
+
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
 
 We can see a few trends from the plots:
 - People are starting to move later in the day on weekends.
